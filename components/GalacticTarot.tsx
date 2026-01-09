@@ -1,10 +1,10 @@
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import * as THREE from 'three';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { FilesetResolver, GestureRecognizer } from '@mediapipe/tasks-vision';
+import React, { useEffect, useRef, useState, useCallback } from 'https://esm.sh/react@19.2.3';
+import * as THREE from 'https://esm.sh/three@0.182.0';
+import { UnrealBloomPass } from 'https://esm.sh/three@0.182.0/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { EffectComposer } from 'https://esm.sh/three@0.182.0/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'https://esm.sh/three@0.182.0/examples/jsm/postprocessing/RenderPass.js';
+import { FilesetResolver, GestureRecognizer } from 'https://esm.sh/@mediapipe/tasks-vision@0.10.22-rc.20250304';
 import { I18N, TAROT_DECK, STELLAR_ENGINE } from '../constants';
 import { ReadingData, TarotCard, MODES } from '../types';
 
@@ -82,7 +82,7 @@ const GalacticTarot: React.FC = () => {
   const [isPreloaded, setIsPreloaded] = useState(false); 
   const [showHelp, setShowHelp] = useState(false);
 
-  // 性能与稳定性：将 UI 状态与 3D 循环完全解耦
+  // 稳定性优化：使用 Ref 存储语言相关的文本，避免重绘 3D 场景
   const langRef = useRef(lang);
   const tRef = useRef(I18N[lang]);
   useEffect(() => { 

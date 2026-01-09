@@ -1,9 +1,9 @@
 
 /**
- * 兼容性与性能优化
- * 1. 拦截并过滤 TF/MediaPipe 的系统级日志，减少 Console 噪音
- * 2. 移除 importmap，改用直接路径引用以规避 CSP inline-script 错误
- * 3. 针对中国区部署优化资源加载链
+ * 仙女座神启 - 核心初始化
+ * 1. 拦截 TF/MediaPipe 日志，保持控制台整洁
+ * 2. 采用全路径 ESM 导入，彻底解决内联脚本 CSP 报错
+ * 3. 程序化配置 Tailwind
  */
 
 (function silencePerformanceLogs() {
@@ -29,7 +29,6 @@
   console.error = (...args) => filter(args, originals.error);
 })();
 
-// 配置 Tailwind (程序化注入以规避 inline 限制)
 if ((window as any).tailwind) {
   (window as any).tailwind.config = {
     theme: {
@@ -47,7 +46,7 @@ if ((window as any).tailwind) {
   };
 }
 
-import React from 'react';
+import React from 'https://esm.sh/react@19.2.3';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 

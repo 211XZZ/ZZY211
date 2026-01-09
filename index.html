@@ -1,0 +1,120 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Andromeda Oracle - M31 Convergence</title>
+    <script>
+      // Early console filtering to silence TF Lite / MediaPipe noise before module initialization
+      (function() {
+        const keywords = [
+          "tensorflow", 
+          "xnnpack", 
+          "delegate", 
+          "mediapipe", 
+          "created tensorflow", 
+          "tflite",
+          "wasm-check"
+        ];
+        const originals = {
+          log: console.log,
+          info: console.info,
+          warn: console.warn,
+          error: console.error,
+          debug: console.debug
+        };
+        function shouldFilter(args) {
+          try {
+            const combined = args.map(a => {
+              if (typeof a === 'string') return a;
+              try { return JSON.stringify(a); } catch(e) { return String(a); }
+            }).join(" ").toLowerCase();
+            return keywords.some(k => combined.includes(k));
+          } catch (e) { return false; }
+        }
+        console.log = (...args) => { if (!shouldFilter(args)) originals.log.apply(console, args); };
+        console.info = (...args) => { if (!shouldFilter(args)) originals.info.apply(console, args); };
+        console.warn = (...args) => { if (!shouldFilter(args)) originals.warn.apply(console, args); };
+        console.error = (...args) => { if (!shouldFilter(args)) originals.error.apply(console, args); };
+        if (originals.debug) {
+          console.debug = (...args) => { if (!shouldFilter(args)) originals.debug.apply(console, args); };
+        }
+      })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              ethereal: ['Cinzel', 'serif'],
+            },
+            colors: {
+              gold: '#D4AF37',
+              deepspace: '#000008',
+            },
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: #000008;
+      }
+      .glass-ui {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .glow-text {
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(212, 175, 55, 0.3);
+      }
+      @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+      }
+      .animate-float {
+        animation: float 6s ease-in-out infinite;
+      }
+      @keyframes fade-in {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      .animate-fade-in {
+        animation: fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+      /* Hide scrollbar for Chrome, Safari and Opera */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      /* Hide scrollbar for IE, Edge and Firefox */
+      .no-scrollbar {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+      }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "three": "https://esm.sh/three@^0.182.0",
+    "three/": "https://esm.sh/three@^0.182.0/",
+    "@mediapipe/tasks-vision": "https://esm.sh/@mediapipe/tasks-vision@^0.10.22-rc.20250304"
+  }
+}
+</script>
+</head>
+<body>
+    <div id="root"></div>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "name": "Andromeda Oracle",
+  "description": "A galactic-themed Tarot divination application featuring 3D Three.js visualizations and MediaPipe gesture-controlled interactions.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

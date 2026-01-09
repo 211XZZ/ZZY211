@@ -8,9 +8,6 @@ import { FilesetResolver, GestureRecognizer } from '@mediapipe/tasks-vision';
 import { I18N, TAROT_DECK, STELLAR_ENGINE } from '../constants';
 import { ReadingData, TarotCard, MODES } from '../types';
 
-/**
- * 辅助函数：创建粒子纹理
- */
 const createCircleTexture = () => {
   const canvas = document.createElement('canvas');
   canvas.width = 64; canvas.height = 64;
@@ -26,9 +23,6 @@ const createCircleTexture = () => {
   return new THREE.CanvasTexture(canvas);
 };
 
-/**
- * 辅助函数：创建星云纹理
- */
 const createNebulaTexture = () => {
   const canvas = document.createElement('canvas');
   canvas.width = 128; canvas.height = 128;
@@ -88,27 +82,28 @@ const GalacticTarot: React.FC = () => {
   const [isPreloaded, setIsPreloaded] = useState(false); 
   const [showHelp, setShowHelp] = useState(false);
 
-  // 拖拽菜单状态
+  // Stability Optimization: Refs for state and callbacks
+  const langRef = useRef(lang);
+  const tRef = useRef(I18N[lang]);
+  useEffect(() => { 
+    langRef.current = lang;
+    tRef.current = I18N[lang];
+  }, [lang]);
+
   const [menuPos, setMenuPos] = useState({ x: 80, y: 80 });
   const [isMenuDragging, setIsMenuDragging] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [trail, setTrail] = useState<{ x: number, y: number, id: number }[]>([]);
   const trailIdCounter = useRef(0);
 
-  // 性能优化：将语言相关的文本映射到 Ref
-  const tRef = useRef(I18N[lang]);
-  useEffect(() => { tRef.current = I18N[lang]; }, [lang]);
-
-  // 配置参数
   const particleCount = 15000;
   const particleSizeScale = 0.6; 
   const coreColor = "#FFCC00";
   const galaxyColor = "#4466FF";
-  const nebulaIntensity = 0.15; // 调弱默认强度
+  const nebulaIntensity = 0.15;
   const accretionSpeed = 1.8;
   const flareFreq = 0.4;
   
-  // Three.js 状态引用 (解耦渲染与 React State)
   const modeRef = useRef<number>(MODES.GALAXY);
   const rotY = useRef<number>(0);
   const rotX = useRef<number>(0);
@@ -120,7 +115,6 @@ const GalacticTarot: React.FC = () => {
   const isPointerDown = useRef<boolean>(false);
   const lastPointer = useRef({ x: 0, y: 0 });
 
-  // Three.js 对象持久化
   const sceneRef = useRef<THREE.Scene | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const composerRef = useRef<EffectComposer | null>(null);
@@ -132,9 +126,6 @@ const GalacticTarot: React.FC = () => {
   const mainParticleDataRef = useRef<any[]>([]);
   const coreLightRef = useRef<THREE.PointLight | null>(null);
 
-  /**
-   * 停止摄像头
-   */
   const stopSensors = useCallback(() => {
     if (videoRef.current?.srcObject) {
       (videoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop());
@@ -144,9 +135,6 @@ const GalacticTarot: React.FC = () => {
     setGestureHint(tRef.current.hintReady);
   }, []);
 
-  /**
-   * 重置状态
-   */
   const handleDismiss = useCallback(() => {
     setReading(null);
     modeRef.current = MODES.GALAXY;
@@ -155,9 +143,6 @@ const GalacticTarot: React.FC = () => {
     stopSensors();
   }, [stopSensors]);
 
-  /**
-   * 占卜逻辑
-   */
   const fetchReading = useCallback(async (card: TarotCard) => {
     if (isFetching.current) return;
     isFetching.current = true;
@@ -168,10 +153,11 @@ const GalacticTarot: React.FC = () => {
 
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
-      const localizedDeck = lang === 'cn' ? STELLAR_ENGINE.cn : STELLAR_ENGINE.en;
+      const currentLang = langRef.current;
+      const localizedDeck = currentLang === 'cn' ? STELLAR_ENGINE.cn : STELLAR_ENGINE.en;
       const result = localizedDeck[card.id] || localizedDeck["fool"];
       setReading({
-        cardName: lang === 'cn' ? card.cn : card.en,
+        cardName: currentLang === 'cn' ? card.cn : card.en,
         ...result
       });
       modeRef.current = MODES.CARD;
@@ -182,15 +168,19 @@ const GalacticTarot: React.FC = () => {
     } finally {
       isFetching.current = false;
     }
-  }, [lang, handleDismiss]);
+  }, [handleDismiss]);
 
-  /**
-   * 初始化星系
-   */
+  // Keep Stable callback refs for the animate loop to use
+  const fetchReadingStableRef = useRef(fetchReading);
+  const handleDismissStableRef = useRef(handleDismiss);
+  useEffect(() => {
+    fetchReadingStableRef.current = fetchReading;
+    handleDismissStableRef.current = handleDismiss;
+  }, [fetchReading, handleDismiss]);
+
   const setupM31Galaxy = useCallback(() => {
     if (!sceneRef.current) return;
     
-    // 清理
     if (galaxyPointsRef.current) sceneRef.current.remove(galaxyPointsRef.current);
     if (nebulaGroupRef.current) sceneRef.current.remove(nebulaGroupRef.current);
 
@@ -273,14 +263,12 @@ const GalacticTarot: React.FC = () => {
       sizeArray[i] = baseSize * particleSizeScale;
 
       if (nebulaTexture && i % 400 === 0 && i < 15000) {
-        const originalOp = 0.06; // 调低基础透明度，更柔和
-        const opacity = originalOp * (nebulaIntensity / 0.15);
-        const nebulaColor = color.clone().offsetHSL(Math.random() * 0.2 - 0.1, 0.1, 0); // 增加色彩多样性
+        const opacity = 0.06 * (nebulaIntensity / 0.15);
         const nebulaMat = new THREE.SpriteMaterial({
           map: nebulaTexture,
-          color: nebulaColor.multiplyScalar(0.8),
+          color: color.clone().offsetHSL(Math.random() * 0.2 - 0.1, 0.1, 0).multiplyScalar(0.8),
           transparent: true,
-          opacity: opacity,
+          opacity,
           blending: THREE.AdditiveBlending,
           depthWrite: false
         });
@@ -332,7 +320,7 @@ const GalacticTarot: React.FC = () => {
     mainParticleDataRef.current = particleData;
   }, [particleCount, coreColor, galaxyColor, nebulaIntensity, particleSizeScale]);
 
-  // --- 初始化 Three.js (仅执行一次) ---
+  // Main Three.js setup - only runs once to ensure stability
   useEffect(() => {
     if (!containerRef.current) return;
     
@@ -401,7 +389,6 @@ const GalacticTarot: React.FC = () => {
         coreLightRef.current.intensity = 600 + flareVal * 1500;
       }
 
-      // 手势识别
       if (recognizer && videoRef.current?.readyState >= 2) {
         if (Math.floor(time * 30) % 3 === 0) {
           try {
@@ -413,10 +400,10 @@ const GalacticTarot: React.FC = () => {
                 rotYSpeed.current = THREE.MathUtils.lerp(rotYSpeed.current, (lm[8].x - 0.5) * -0.18, 0.06);
                 setGestureHint(tRef.current.hintPalm); 
               } else if (name === "Victory") { 
-                handleDismiss(); setGestureHint(tRef.current.hintVictory); 
+                handleDismissStableRef.current(); setGestureHint(tRef.current.hintVictory); 
               } else if (lm[4] && lm[8] && Math.hypot(lm[4].x-lm[8].x, lm[4].y-lm[8].y) < 0.038) {
                 if (modeRef.current === MODES.GALAXY && !isFetching.current) {
-                  fetchReading(TAROT_DECK[Math.floor(Math.random()*TAROT_DECK.length)]);
+                  fetchReadingStableRef.current(TAROT_DECK[Math.floor(Math.random()*TAROT_DECK.length)]);
                 }
                 setGestureHint(tRef.current.hintPinch);
               } else { setGestureHint(tRef.current.hintReady); }
@@ -425,7 +412,6 @@ const GalacticTarot: React.FC = () => {
         }
       }
 
-      // 星系旋转：支持 360 度
       if (!isPointerDown.current) {
         rotYSpeed.current = THREE.MathUtils.lerp(rotYSpeed.current, 0.002, 0.02);
         rotXSpeed.current = THREE.MathUtils.lerp(rotXSpeed.current, 0, 0.02);
@@ -433,7 +419,6 @@ const GalacticTarot: React.FC = () => {
       rotY.current += rotYSpeed.current;
       rotX.current += rotXSpeed.current;
 
-      // 更新粒子位置
       if (galaxyPointsRef.current) {
         const pAttr = galaxyPointsRef.current.geometry.attributes.position;
         const mode = modeRef.current;
@@ -450,19 +435,14 @@ const GalacticTarot: React.FC = () => {
           p.curr.lerp(target, lerpVal);
           let fx = p.curr.x, fy = p.curr.y, fz = p.curr.z;
           
-          // 在 3D 空间中计算旋转
           if (mode !== MODES.CARD) {
             const accretionAngle = rotY.current * (1.2 + (1.2 - p.distRatio) * accretionSpeed) * p.mass;
             const sY = Math.sin(accretionAngle), cY = Math.cos(accretionAngle);
             const sX = Math.sin(rotX.current), cX = Math.cos(rotX.current);
-            
-            // Y 轴旋转
             let x1 = p.curr.x * cY - p.curr.z * sY;
             let z1 = p.curr.x * sY + p.curr.z * cY;
-            // X 轴旋转 (360 漫游效果)
             let y2 = p.curr.y * cX - z1 * sX;
             let z2 = p.curr.y * sX + z1 * cX;
-            
             fx = x1; fy = y2; fz = z2;
           }
           const flareDisplacement = flareVal * (1.0 - p.distRatio) * 2.8;
@@ -517,6 +497,7 @@ const GalacticTarot: React.FC = () => {
     };
     window.addEventListener('resize', handleResize);
 
+    const canvas = renderer.domElement;
     const handlePointerDown = (e: PointerEvent) => { 
       if ((e.target as HTMLElement).closest('button')) return;
       isPointerDown.current = true; 
@@ -533,7 +514,6 @@ const GalacticTarot: React.FC = () => {
       } 
     };
 
-    const canvas = renderer.domElement;
     canvas.addEventListener('pointerdown', handlePointerDown);
     window.addEventListener('pointerup', handlePointerUp);
     canvas.addEventListener('pointermove', handlePointerMove);
@@ -547,7 +527,7 @@ const GalacticTarot: React.FC = () => {
       recognizer?.close();
       if (rendererRef.current) rendererRef.current.dispose();
     };
-  }, [setupM31Galaxy, fetchReading, handleDismiss]);
+  }, [setupM31Galaxy]); // Stable init
 
   const startSensors = async () => {
     try {

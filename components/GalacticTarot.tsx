@@ -82,7 +82,7 @@ const GalacticTarot: React.FC = () => {
   const [isPreloaded, setIsPreloaded] = useState(false); 
   const [showHelp, setShowHelp] = useState(false);
 
-  // Stability Optimization: Refs for state and callbacks
+  // 性能与稳定性：将 UI 状态与 3D 循环完全解耦
   const langRef = useRef(lang);
   const tRef = useRef(I18N[lang]);
   useEffect(() => { 
@@ -163,19 +163,18 @@ const GalacticTarot: React.FC = () => {
       modeRef.current = MODES.CARD;
       setStatus(t.statusDone);
     } catch (e) {
-      setStatus("Error");
+      setStatus("Flux Interference");
       handleDismiss();
     } finally {
       isFetching.current = false;
     }
   }, [handleDismiss]);
 
-  // Keep Stable callback refs for the animate loop to use
-  const fetchReadingStableRef = useRef(fetchReading);
-  const handleDismissStableRef = useRef(handleDismiss);
+  const fetchReadingRef = useRef(fetchReading);
+  const handleDismissRef = useRef(handleDismiss);
   useEffect(() => {
-    fetchReadingStableRef.current = fetchReading;
-    handleDismissStableRef.current = handleDismiss;
+    fetchReadingRef.current = fetchReading;
+    handleDismissRef.current = handleDismiss;
   }, [fetchReading, handleDismiss]);
 
   const setupM31Galaxy = useCallback(() => {
@@ -320,7 +319,6 @@ const GalacticTarot: React.FC = () => {
     mainParticleDataRef.current = particleData;
   }, [particleCount, coreColor, galaxyColor, nebulaIntensity, particleSizeScale]);
 
-  // Main Three.js setup - only runs once to ensure stability
   useEffect(() => {
     if (!containerRef.current) return;
     
@@ -400,10 +398,10 @@ const GalacticTarot: React.FC = () => {
                 rotYSpeed.current = THREE.MathUtils.lerp(rotYSpeed.current, (lm[8].x - 0.5) * -0.18, 0.06);
                 setGestureHint(tRef.current.hintPalm); 
               } else if (name === "Victory") { 
-                handleDismissStableRef.current(); setGestureHint(tRef.current.hintVictory); 
+                handleDismissRef.current(); setGestureHint(tRef.current.hintVictory); 
               } else if (lm[4] && lm[8] && Math.hypot(lm[4].x-lm[8].x, lm[4].y-lm[8].y) < 0.038) {
                 if (modeRef.current === MODES.GALAXY && !isFetching.current) {
-                  fetchReadingStableRef.current(TAROT_DECK[Math.floor(Math.random()*TAROT_DECK.length)]);
+                  fetchReadingRef.current(TAROT_DECK[Math.floor(Math.random()*TAROT_DECK.length)]);
                 }
                 setGestureHint(tRef.current.hintPinch);
               } else { setGestureHint(tRef.current.hintReady); }
@@ -527,7 +525,7 @@ const GalacticTarot: React.FC = () => {
       recognizer?.close();
       if (rendererRef.current) rendererRef.current.dispose();
     };
-  }, [setupM31Galaxy]); // Stable init
+  }, [setupM31Galaxy]);
 
   const startSensors = async () => {
     try {

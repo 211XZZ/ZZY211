@@ -1,8 +1,8 @@
-
 /**
  * 仙女座神启 - 核心初始化
- * 1. 拦截 TF/MediaPipe 日志，保持控制台整洁
+ * 1. 拦截并过滤 TF/MediaPipe 的系统级日志
  * 2. 采用全路径 ESM 导入，彻底规避内联脚本 CSP 报错
+ * 3. 在外部 JS 文件中安全配置 Tailwind
  */
 
 (function silencePerformanceLogs() {
@@ -28,7 +28,7 @@
   console.error = (...args) => filter(args, originals.error);
 })();
 
-// 配置 Tailwind (程序化注入)
+// 在外部文件中配置 Tailwind
 if ((window as any).tailwind) {
   (window as any).tailwind.config = {
     theme: {

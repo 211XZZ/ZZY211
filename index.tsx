@@ -2,8 +2,7 @@
 /**
  * 仙女座神启 - 核心初始化
  * 1. 拦截 TF/MediaPipe 日志，保持控制台整洁
- * 2. 采用全路径 ESM 导入，彻底解决内联脚本 CSP 报错
- * 3. 程序化配置 Tailwind
+ * 2. 采用全路径 ESM 导入，彻底规避内联脚本 CSP 报错
  */
 
 (function silencePerformanceLogs() {
@@ -29,6 +28,7 @@
   console.error = (...args) => filter(args, originals.error);
 })();
 
+// 配置 Tailwind (程序化注入)
 if ((window as any).tailwind) {
   (window as any).tailwind.config = {
     theme: {

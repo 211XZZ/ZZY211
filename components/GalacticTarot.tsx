@@ -82,7 +82,6 @@ const GalacticTarot: React.FC = () => {
   const [isPreloaded, setIsPreloaded] = useState(false); 
   const [showHelp, setShowHelp] = useState(false);
 
-  // 稳定性优化：使用 Ref 存储语言相关的文本，避免重绘 3D 场景
   const langRef = useRef(lang);
   const tRef = useRef(I18N[lang]);
   useEffect(() => { 
